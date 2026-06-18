@@ -55,19 +55,25 @@ openspec/
   skills/openspec-*/SKILL.md     # the skills those commands invoke
 ```
 
-## Active change: `add-content-search`
+## Active change: `hakjicon-content-search` (Must-have 블루프린트)
 
-The first MVP change. Key decisions already locked in its `design.md` — honor these when implementing:
+선행 MVP `add-content-search`(검색만)는 구현 → Vercel 배포 → 아카이브 완료
+(`openspec/changes/archive/2026-06-18-add-content-search/`). 현재 활성 설계도는
+`hakjicon-content-search` 로, Must 3개를 다룬다:
 
-- **Search**: `title` + `description` via `ILIKE '%term%'` partial match. No tsvector/full-text, no vector/semantic search (Korean tokenization deliberately skipped for MVP).
-- **Data access**: browser → Supabase **direct** via `@supabase/supabase-js` (publishable key + read-only RLS). No Next.js API route layer yet.
-- **Data model**: single `contents` table (`id, title, author, category, description, cover_url`), seeded with ~10–20 dummy 학지사 books.
-- **Out of scope (backlog)**: recommendation engine, auth, write/CRUD, category filter, sorting.
+- **검색 (Search)** — `title`/`description` ILIKE 부분일치. *(구현 완료, 배포됨)*
+- **인기 추천 (Popular)** — `view_count` 기준 상위 N개. *(미구현)*
+- **북마크 저장 (Bookmark)** — 인증 없이 localStorage client id 기반 익명 저장. *(미구현)*
 
-Implementation needs Supabase env vars (`.env.local`):
+Should/Could/Won't 범위는 `proposal.md` 의 **Out of Scope** 참조. 데이터 모델·RLS·RPC는
+`design.md` 가 SSoT다 — **CLAUDE.md에 SQL/스키마를 복사하지 않는다**(어긋남 방지).
 
+**데이터 접근**: 브라우저 → Supabase 직접 (`@supabase/supabase-js`, publishable key). 북마크
+쓰기를 위해 RLS는 "콘텐츠 읽기전용 + bookmarks anon write" 로 확장(자세한 정책은 design.md).
+
+**Env (`.env.local`)**:
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — the new publishable key (prefix `sb_publishable_...`), which replaces the legacy `anon` JWT key. Safe to expose in the browser; pair with read-only RLS. (Secret keys, prefix `sb_secret_...`, replace `service_role` and must stay server-side only — not used in this MVP.)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — publishable key(`sb_publishable_...`, legacy anon 대체). 브라우저 노출 안전. (secret 키 `sb_secret_...`는 서버 전용, 본 MVP 미사용.)
 
 
 ## 스펙 (Single Source of Truth)
